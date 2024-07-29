@@ -1,5 +1,28 @@
 *.class
 *.log
+.idea
+target
+project/project/target
+project/project/project
+project/project/.bloop
+project/.bloop
+remote.conf
+.DS_Store
+*.png
+shell.nix
+.direnv
+.nixpkgs*
+.envrc
+.bloop/*
+.metals/*
+.vscode/
+docs/public
+.bsp/
+project/metals.sbt
+project/project/metals.sbt
+.metals
+.metals.bsp
+src/files/*
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
