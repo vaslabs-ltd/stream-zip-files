@@ -1,66 +1,68 @@
 
-import fs2.io.file.Files
-import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder
-import software.amazon.awssdk.services.bcmdataexports.model.Table
+import cats.effect.{IO, IOApp}
+import fs2.Stream
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import software.amazon.awssdk.services.dynamodb.model.{AttributeValue, GetItemRequest, PutItemRequest}
+import zip_partitioner.FileArchive
 
-import java.io.File
-import java.util.Base64
-import scala.jdk.CollectionConverters.IterableHasAsScala
+import java.net.URI
+import scala.jdk.CollectionConverters.MapHasAsJava
 
-object DynamoZipStore {
+object DynamoZipStore extends IOApp.Simple {
 
-//  private val client = AmazonDynamoDBClientBuilder.standard()
-//    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:4566", "us-west-2"))
-//    .build()
-//
-//  private val dynamoDB = new DynamoDB(client)
-//
-//  def uploadDataToDynamoDB(tableName: String): Unit = {
-//    println("Uploading data to DynamoDB")
-//
-//    val table: Table = dynamoDB.getTable(tableName)
-//
-//    val directoryPath = "path/to/your/local/files"
-//    val folder = new File(directoryPath)
-//
-//    if (folder.exists() && folder.isDirectory) {
-//            val files = folder.listFiles().filter(_.isFile)
-//            files.foreach { file =>
-//              val fileName = file.getName
-//              val fileContent = Files[IO].readAll(file.toPath)
-//              val fileContentBase64 = Base64.getEncoder.encodeToString(fileContent)
-//
-//              val outcome: PutItemOutcome = table.putItem(
-//                new Item()
-//                  .withPrimaryKey("FileID", fileName)
-//                  .withString("Content", fileContentBase64)
-//              )
-//            }
-//      println("Files uploaded successfully.")
-//    } else {
-//      println(s"Directory $directoryPath does not exist or is not a directory.")
-//    }
-//  }
-//
-//  def downloadDataFromDynamoDB(tableName: String): Unit = {
-//    println("Downloading data from DynamoDB")
-//
-//    val table: Table = dynamoDB.getTable(tableName)
-//
-//    val scanSpec = new ScanSpec()
-//    val items = table.scan(scanSpec)
-//
-//    val downloadPath = "path/to/save/files"
-//
-//    items.asScala.foreach { item =>
-//      val fileId = item.getString("FileID")
-//      val fileContentBase64 = item.getString("Content")
-//      val fileContent = Base64.getDecoder.decode(fileContentBase64)
-//
-//      //      Files.write(Paths.get(s"$downloadPath/$fileId"), fileContent)
-//    }
-//
-//    println("Files downloaded successfully.")
-//  }
+  val localstackEndpoint = "http://localhost:4566"
 
+  val dynamoDbClient = DynamoDbClient.builder()
+    .endpointOverride(URI.create(localstackEndpoint))
+    .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test")))
+    .region(Region.US_EAST_1) // or any region
+    .build()
+
+  def uploadFilesToDynamoDB(fileArchives: List[FileArchive], tableName: String): Unit = {
+
+    fileArchives.foreach { fileArchive =>
+      val fileName =fileArchive.name
+      val fileBytes = fileArchive.compressedData
+
+      val item = Map(
+        "fileName" -> AttributeValue.builder().s(fileName).build(),
+        "data" -> AttributeValue.builder().s(fileBytes).build()
+      ).asJava
+
+      val request = PutItemRequest.builder()
+        .tableName(tableName)
+        .item(item)
+        .build()
+
+      dynamoDbClient.putItem(request)
+    }
+
+    dynamoDbClient.close()
+  }
+
+  def downloadFilesFromDynamoDB(fileNames: List[String], tableName: String): Stream[IO, FileArchive] = {
+    val dynamoDbClient = DynamoDbClient.builder().build()
+
+    Stream.emits(fileNames).evalMap { fileName => IO {
+        val key = Map("fileName" -> AttributeValue.builder().s(fileName).build()).asJava
+
+        val request = GetItemRequest.builder()
+          .tableName(tableName)
+          .key(key)
+          .build()
+
+        val response = dynamoDbClient.getItem(request)
+        val item = response.item()
+
+        FileArchive(fileName, item.get("data").s())
+      }.guarantee(IO(dynamoDbClient.close()))
+    }
+
+  }
+
+  override def run: IO[Unit] = {
+    IO.unit
+  }
 }
