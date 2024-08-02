@@ -27,7 +27,7 @@ object DynamoZipStore {
         .tableName(tableName)
         .item(item)
         .build()
-      IO.fromCompletableFuture(IO(client.putItem(request))).void
+      IO.fromCompletableFuture(IO.delay(client.putItem(request))).void
     }.compile.drain
   }
 
@@ -41,7 +41,7 @@ object DynamoZipStore {
           .key(key)
           .build()
 
-        val response = IO.fromCompletableFuture(IO(client.getItem(request)))
+        val response = IO.fromCompletableFuture(IO.delay(client.getItem(request)))
         val item = response.unsafeRunSync().item()
 
         FileArchive(fileName, item.get(valueColumnName).s())
