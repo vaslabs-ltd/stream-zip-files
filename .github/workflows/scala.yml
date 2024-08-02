@@ -42,8 +42,6 @@ jobs:
     - name: Set up Aws cli
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: 'test'
-        aws-secret-access-key: 'test'
         aws-region: eu-west-1
     - name: Create DynamoDB table
       run: |
