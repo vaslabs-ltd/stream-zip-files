@@ -2,9 +2,8 @@ package dynamo_zip_store
 
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
 import fs2.Stream
-import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbClient}
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.model.{AttributeValue, GetItemRequest, GetItemResponse, PutItemRequest, PutItemResponse}
 import zip_partitioner.FileArchive
 
@@ -43,7 +42,7 @@ object DynamoZipStore {
       val response: IO[GetItemResponse] = IO.fromCompletableFuture(IO.delay(client.getItem(request)))
       val itemIO: IO[java.util.Map[String, AttributeValue]] = response.map(_.item())
       itemIO.map(
-        item => FileArchive(fileName, getItemValue(dynamoConfig.keyColumnName, item))
+        item => FileArchive(fileName, getItemValue(dynamoConfig.dataColumnName, item))
       )
     }
   }

@@ -8,13 +8,11 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbClient}
+import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import zip_partitioner.FileArchive
 import zip_partitioner.ZipPartitioner.createStreamArchive
 import fs2.Stream
-import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 
-import java.lang.Thread.sleep
 import java.net.URI
 
 object DynamoZipStoreSpec extends Specification{
@@ -62,6 +60,6 @@ object DynamoZipStoreSpec extends Specification{
         .build()
     }
 
-  val dynamoConfig = DynamoZipStore.DynamoDestinationConfig("myDynamoTable", "filename", "data")
+  val dynamoConfig = DynamoZipStore.DynamoDestinationConfig("myDynamoTable", "fileName", "data")
 }
 
