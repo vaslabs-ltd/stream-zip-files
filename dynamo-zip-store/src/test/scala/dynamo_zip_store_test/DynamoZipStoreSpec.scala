@@ -1,6 +1,7 @@
 package dynamo_zip_store_test
 
-import dynamo_zip_store.DynamoZipStore.uploadFilesToDynamoDB
+import cats.effect.unsafe.implicits.global
+import dynamo_zip_store.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
@@ -15,8 +16,16 @@ object DynamoZipStoreSpec extends Specification{
   "DynamoZipStore" should {
     "uploadFilesToDynamoDB" in new LocalScope {
 
-      uploadFilesToDynamoDB(dynamoDbClient, List(FileArchive("test", "test")), "myDynamoTable")
-      1 must_== 1
+      val toUpload = List(FileArchive("test", "test"))
+      uploadFilesToDynamoDB(dynamoDbClient, toUpload, "myDynamoTable").unsafeRunSync()
+
+      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), "myDynamoTable")
+        .unsafeRunSync()
+        .compile
+        .toList
+        .unsafeRunSync()
+
+      downloaded must_== toUpload
     }
   }
 

@@ -13,7 +13,7 @@ object DynamoZipStore {
 
 
 
-  def uploadFilesToDynamoDB(client: DynamoDbClient, fileArchives: List[FileArchive], tableName: String): Unit = {
+  def uploadFilesToDynamoDB(client: DynamoDbClient, fileArchives: List[FileArchive], tableName: String): IO[Unit] = {
 
     fileArchives.foreach { fileArchive =>
       val fileName =fileArchive.name
@@ -31,7 +31,7 @@ object DynamoZipStore {
 
       client.putItem(request)
     }
-
+    IO.unit
   }
 
   def downloadFilesFromDynamoDB(client: DynamoDbClient, fileNames: List[String], tableName: String): IO[Stream[IO, FileArchive]] = IO{
