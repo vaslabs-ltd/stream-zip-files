@@ -15,7 +15,7 @@ object DynamoZipStoreSpec extends Specification{
   "DynamoZipStore" should {
     "uploadFilesToDynamoDB" in new LocalScope {
 
-      uploadFilesToDynamoDB(dynamoDbClient, List(FileArchive("test", "test")), "test")
+      uploadFilesToDynamoDB(dynamoDbClient, List(FileArchive("test", "test")), "myDynamoTable")
       1 must_== 1
     }
   }
