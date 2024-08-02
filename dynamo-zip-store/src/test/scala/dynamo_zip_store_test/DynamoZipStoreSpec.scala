@@ -2,8 +2,7 @@ package dynamo_zip_store_test
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import dynamo_zip_store.DynamoZipStore
-import dynamo_zip_store.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
+import zip_partitioner.dynamo.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
@@ -12,6 +11,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import zip_partitioner.FileArchive
 import zip_partitioner.ZipPartitioner.createStreamArchive
 import fs2.Stream
+import zip_partitioner.dynamo.DynamoZipStore
 
 import java.net.URI
 

@@ -1,5 +1,4 @@
-package dynamo_zip_store
-
+package zip_partitioner.dynamo
 
 import cats.effect.IO
 import fs2.Stream
