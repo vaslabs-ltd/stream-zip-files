@@ -40,7 +40,7 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
     - name: Set up Aws cli
-      uses: aws-actions/configure-aws-cli@v1
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: eu-west-1
     - name: Create DynamoDB table
