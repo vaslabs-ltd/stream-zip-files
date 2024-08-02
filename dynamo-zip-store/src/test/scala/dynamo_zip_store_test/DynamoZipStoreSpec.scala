@@ -27,7 +27,9 @@ object DynamoZipStoreSpec extends Specification{
 
       downloaded must_== toUpload
     }
+  }
 
+  "DynamoZipStore" should {
     "full circle test" in new LocalScope {
       val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
       val listFileArchives = createStreamArchive(filePaths)
@@ -42,6 +44,7 @@ object DynamoZipStoreSpec extends Specification{
         .unsafeRunSync()
 
       downloaded must_== listFileArchives
+    }
   }
 
   trait LocalScope extends Scope {
@@ -53,6 +56,5 @@ object DynamoZipStoreSpec extends Specification{
         .region(Region.EU_WEST_1)
         .build()
     }
-  }
 }
 
