@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: eu-west-1
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
+#      AWS_ACCESS_KEY_ID: test
+#      AWS_SECRET_ACCESS_KEY: test
     services:
       localstack:
         image: localstack/localstack:latest
