@@ -37,7 +37,7 @@ jobs:
         cache: 'sbt'
     - name: Create DynamoDB table
       run: |
-          aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+          aws --endpoint-url=http://localhost:4566 dynamodb create-table --debug \
             --table-name myDynamoTable \
             --key-schema \
             AttributeName=fileName,KeyType=HASH \
