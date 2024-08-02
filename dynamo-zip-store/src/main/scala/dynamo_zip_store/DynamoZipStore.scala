@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters.MapHasAsJava
 
 object DynamoZipStore {
 
-  def uploadFilesToDynamoDB(client: DynamoDbAsyncClient, fileArchives: Stream[IO, FileArchive], tableName: String, keyColumnName: String, valueColumnName: String): IO[Unit] = {
+  def uploadFilesToDynamoDB(client: DynamoDbAsyncClient, fileArchives: Stream[IO, FileArchive], tableName: String, keyColumnName: String, valueColumnName: String): Stream[IO, PutItemRequest] = {
 
     fileArchives.foreach { fileArchive =>
       val fileName =fileArchive.name
@@ -28,7 +28,7 @@ object DynamoZipStore {
         .item(item)
         .build()
       IO.fromCompletableFuture(IO.delay(client.putItem(request))).void
-    }.compile.drain
+    }
   }
 
   def downloadFilesFromDynamoDB(client: DynamoDbAsyncClient, fileNames: List[String], tableName: String, keyColumnName: String, valueColumnName: String): IO[Stream[IO, FileArchive]] = IO {
