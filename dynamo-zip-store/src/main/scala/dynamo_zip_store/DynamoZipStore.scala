@@ -1,16 +1,15 @@
+package dynamo_zip_store
 
-import cats.effect.{IO, IOApp}
+
+import cats.effect.IO
 import fs2.Stream
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.{AttributeValue, GetItemRequest, PutItemRequest}
 import zip_partitioner.FileArchive
 
-import java.net.URI
 import scala.jdk.CollectionConverters.MapHasAsJava
 
-object DynamoZipStore extends IOApp.Simple {
+object DynamoZipStore {
 
 
 
@@ -54,7 +53,4 @@ object DynamoZipStore extends IOApp.Simple {
 
   }
 
-  override def run: IO[Unit] = {
-    IO.unit
-  }
 }

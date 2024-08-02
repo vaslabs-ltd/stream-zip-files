@@ -39,10 +39,6 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
-#    - name: Set up Aws cli
-#      uses: aws-actions/configure-aws-credentials@v4
-#      with:
-#        aws-region: eu-west-1
     - name: Create DynamoDB table
       run: |
           aws --endpoint-url=http://localhost:4566 dynamodb create-table --region eu-west-1 --debug \

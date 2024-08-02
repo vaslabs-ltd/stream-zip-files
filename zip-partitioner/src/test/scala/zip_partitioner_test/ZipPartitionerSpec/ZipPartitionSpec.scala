@@ -1,4 +1,5 @@
 package zip_partitioner_test.ZipPartitionerSpec
+
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import fs2.Stream
