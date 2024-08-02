@@ -20,7 +20,7 @@ object DynamoZipStoreSpec extends Specification{
 
       val toUpload = Stream.emits(List(FileArchive("test", "test")))
 
-      uploadFilesToDynamoDB(dynamoDbClient, toUpload, "myDynamoTable", "filename", "data").unsafeRunSync()
+      uploadFilesToDynamoDB(dynamoDbClient, toUpload, "myDynamoTable", "filename", "data")
 
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), "myDynamoTable", "filename", "data")
         .unsafeRunSync()
@@ -34,7 +34,7 @@ object DynamoZipStoreSpec extends Specification{
       val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
       val listFileArchives = createStreamArchive(filePaths)
 
-      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, "myDynamoTable", "filename", "data").unsafeRunSync()
+      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, "myDynamoTable", "filename", "data")
 
       val fileNames = List("file1.txt", "file2.txt")
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, "myDynamoTable", "filename", "data")
