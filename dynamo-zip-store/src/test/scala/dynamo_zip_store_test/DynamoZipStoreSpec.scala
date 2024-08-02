@@ -1,5 +1,6 @@
 package dynamo_zip_store_test
 
+import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import dynamo_zip_store.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
 import org.specs2.mutable.Specification
@@ -11,6 +12,7 @@ import zip_partitioner.FileArchive
 import zip_partitioner.ZipPartitioner.createStreamArchive
 import fs2.Stream
 
+import java.lang.Thread.sleep
 import java.net.URI
 
 object DynamoZipStoreSpec extends Specification{
@@ -18,12 +20,15 @@ object DynamoZipStoreSpec extends Specification{
   "DynamoZipStore" should {
     "uploadFilesToDynamoDB and then download them must be the same" in new LocalScope {
 
-      val toUpload = Stream.emits(List(FileArchive("test", "test")))
+      val toUpload: Stream[IO, FileArchive] = Stream.emits(List(FileArchive("test", "test"))).covary[IO]
 
       uploadFilesToDynamoDB(dynamoDbClient, toUpload, "myDynamoTable", "filename", "data")
 
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), "myDynamoTable", "filename", "data")
         .unsafeRunSync()
+
+      println("downloads", downloaded.compile.toList)
+      println("uploads", toUpload.compile.toList)
 
       downloaded must_== toUpload
     }
@@ -35,6 +40,8 @@ object DynamoZipStoreSpec extends Specification{
       val listFileArchives = createStreamArchive(filePaths)
 
       uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, "myDynamoTable", "filename", "data")
+
+      sleep(2000)
 
       val fileNames = List("file1.txt", "file2.txt")
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, "myDynamoTable", "filename", "data")
