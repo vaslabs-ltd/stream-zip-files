@@ -33,6 +33,6 @@ lazy val dynamoZipStore = (project in file("dynamo-zip-store"))
     // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
 //    libraryDependencies += "software.amazon.awssdk" % "aws-sdk-java" % "2.26.25" % "provided",
     // https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb
-    libraryDependencies += "software.amazon.awssdk" % "dynamodb" % "2.26.25"
-
+    libraryDependencies += "software.amazon.awssdk" % "dynamodb" % "2.26.25",
+    libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test"
 )

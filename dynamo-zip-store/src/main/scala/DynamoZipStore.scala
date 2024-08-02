@@ -12,15 +12,9 @@ import scala.jdk.CollectionConverters.MapHasAsJava
 
 object DynamoZipStore extends IOApp.Simple {
 
-  val localstackEndpoint = "http://localhost:4566"
 
-  val dynamoDbClient = DynamoDbClient.builder()
-    .endpointOverride(URI.create(localstackEndpoint))
-    .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test")))
-    .region(Region.US_EAST_1) // or any region
-    .build()
 
-  def uploadFilesToDynamoDB(fileArchives: List[FileArchive], tableName: String): Unit = {
+  def uploadFilesToDynamoDB(client: DynamoDbClient, fileArchives: List[FileArchive], tableName: String): Unit = {
 
     fileArchives.foreach { fileArchive =>
       val fileName =fileArchive.name
@@ -36,14 +30,12 @@ object DynamoZipStore extends IOApp.Simple {
         .item(item)
         .build()
 
-      dynamoDbClient.putItem(request)
+      client.putItem(request)
     }
 
-    dynamoDbClient.close()
   }
 
-  def downloadFilesFromDynamoDB(fileNames: List[String], tableName: String): Stream[IO, FileArchive] = {
-    val dynamoDbClient = DynamoDbClient.builder().build()
+  def downloadFilesFromDynamoDB(client: DynamoDbClient, fileNames: List[String], tableName: String): IO[Stream[IO, FileArchive]] = IO{
 
     Stream.emits(fileNames).evalMap { fileName => IO {
         val key = Map("fileName" -> AttributeValue.builder().s(fileName).build()).asJava
@@ -53,11 +45,11 @@ object DynamoZipStore extends IOApp.Simple {
           .key(key)
           .build()
 
-        val response = dynamoDbClient.getItem(request)
+        val response = client.getItem(request)
         val item = response.item()
 
         FileArchive(fileName, item.get("data").s())
-      }.guarantee(IO(dynamoDbClient.close()))
+      }
     }
 
   }
