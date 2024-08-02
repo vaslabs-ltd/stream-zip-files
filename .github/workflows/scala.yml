@@ -41,7 +41,7 @@ jobs:
             --table-name myDynamoTable \
             --attribute-definitions AttributeName=fileName,AttributeType=S \ 
             --key-schema AttributeName=fileName,KeyType=HASH \
-            --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+            --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
     - name: Run tests
       run: sbt test
 
