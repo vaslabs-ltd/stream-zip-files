@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.dynamodb.{DynamoDbAsyncClient, DynamoDbCl
 import zip_partitioner.FileArchive
 import zip_partitioner.ZipPartitioner.createStreamArchive
 import fs2.Stream
+import software.amazon.awssdk.services.dynamodb.model.PutItemResponse
 
 import java.lang.Thread.sleep
 import java.net.URI
@@ -23,15 +24,14 @@ object DynamoZipStoreSpec extends Specification{
 
       val toUpload: Stream[IO, FileArchive] = Stream.emits(List(FileArchive("test", "test"))).covary[IO]
 
-      uploadFilesToDynamoDB(dynamoDbClient, toUpload, dynamoConfig)
+      uploadFilesToDynamoDB(dynamoDbClient, toUpload, dynamoConfig).compile.drain.unsafeRunSync()
 
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), dynamoConfig)
+        .compile
+        .toList
         .unsafeRunSync()
 
-      println("downloads", downloaded.compile.toList.unsafeRunSync())
-      println("uploads", toUpload.compile.toList.unsafeRunSync())
-
-      downloaded must_== toUpload
+      downloaded must_== toUpload.compile.toList.unsafeRunSync()
     }
   }
 
@@ -40,18 +40,15 @@ object DynamoZipStoreSpec extends Specification{
       val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
       val listFileArchives = createStreamArchive(filePaths)
 
-      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, dynamoConfig)
-
-      sleep(2000)
+      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, dynamoConfig).compile.drain.unsafeRunSync()
 
       val fileNames = List("file1.txt", "file2.txt")
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, dynamoConfig)
-        .unsafeRunSync()
         .compile
         .toList
         .unsafeRunSync()
 
-      downloaded must_== listFileArchives
+      downloaded must_== listFileArchives.compile.toList.unsafeRunSync()
     }
   }
 
