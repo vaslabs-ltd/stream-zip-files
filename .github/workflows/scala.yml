@@ -39,7 +39,8 @@ jobs:
       run: |
           aws --endpoint-url=http://localhost:4566 dynamodb create-table \
             --table-name myDynamoTable \
-            --attribute-definitions AttributeName=fileName,AttributeType=S --key-schema AttributeName=fileName,KeyType=HASH \ 
+            --key-schema AttributeName=fileName,KeyType=HASH \ 
+            --attribute-definitions AttributeName=fileName,AttributeType=S \
             --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
     - name: Run tests
       run: sbt test
