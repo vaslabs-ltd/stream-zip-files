@@ -18,6 +18,18 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-west-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        options: >-
+          --env SERVICES=dynamodb
+          --env DEFAULT_REGION=eu-west-1
 
     steps:
     - uses: actions/checkout@v4
@@ -27,8 +39,16 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
+    - name: Create DynamoDB table
+      run: |
+          aws --endpoint-url=http://localhost:4566 dynamodb create-table --region eu-west-1 --debug \
+            --table-name myDynamoTable \
+            --key-schema \
+            AttributeName=fileName,KeyType=HASH \
+            --attribute-definitions \
+            AttributeName=fileName,AttributeType=S \
+            --provisioned-throughput \
+            ReadCapacityUnits=5,WriteCapacityUnits=5
     - name: Run tests
       run: sbt test
-      # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
-    - name: Upload dependency graph
-      uses: scalacenter/sbt-dependency-submission@ab086b50c947c9774b70f39fc7f6e20ca2706c91
+

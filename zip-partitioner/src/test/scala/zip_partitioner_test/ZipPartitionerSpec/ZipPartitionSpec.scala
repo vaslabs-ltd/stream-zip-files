@@ -1,13 +1,13 @@
 package zip_partitioner_test.ZipPartitionerSpec
+
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import fs2.Stream
 import fs2.io.file.{Files, Path}
-import zip_partitioner.ZipPartitioner.{compress, createStreamArchive, encodeBase64}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import zip_partitioner.FileArchive
 import zip_partitioner.ZipBuilder.createZipFile
+import zip_partitioner.ZipPartitioner.createStreamArchive
 
 import java.io.{File, FileInputStream, FileOutputStream, IOException}
 import java.security.MessageDigest
@@ -29,7 +29,7 @@ object ZipPartitionerSpec extends Specification {
       createZipFile(saveTo, stream).unsafeRunSync()
       val exsistingFiles = hashFilesInDirectory("zip-partitioner/src/files/testFiles").unsafeRunSync()
 
-      unzip(saveTo, "zip-partitioner/src/files/testFilesAfterZip")
+      unzip(saveTo, "zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
       val unzipFiles = hashFilesInDirectory("zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
 
       mapsAreConsistent(exsistingFiles, unzipFiles) must_== true
@@ -66,10 +66,9 @@ object ZipPartitionerSpec extends Specification {
     }
 
 
-    def unzip(zipFilePath: String, destDir: String): Unit = {
+    def unzip(zipFilePath: String, destDir: String): IO[Unit] = IO {
       val buffer = new Array[Byte](1024)
 
-      // Ensure the destination directory exists
       val dir = new File(destDir)
       if (!dir.exists()) dir.mkdirs()
 
@@ -86,13 +85,11 @@ object ZipPartitionerSpec extends Specification {
               throw new IOException("Failed to create directory " + newFile)
             }
           } else {
-            // Fix for Windows-created archives
             val parent = newFile.getParentFile
             if (!parent.isDirectory && !parent.mkdirs()) {
               throw new IOException("Failed to create directory " + parent)
             }
 
-            // Write file content
             val fos = new FileOutputStream(newFile)
             try {
               var len = zis.read(buffer)
@@ -134,14 +131,3 @@ object ZipPartitionerSpec extends Specification {
 
   }
 }
-
-//List(
-// FileArchive(src/files/file1.txt,eJxVijEKBEEQAnP/Mk+43xxFj8ENHSx+/+jdaEUsBcsv0XxzNvXLvg6VMoUYOhsHR1SeWSnG6JPGS/dq4UtYCzrY7M6EaS2sKWYg5vwHu4kyVw==),
-// FileArchive(src/files/file2.txt,eJwdicENADEMwv7ZpWvRiz8RL9Y/NRI2SFzCTQ9plBIZEbfIghYUl+iNCwkPcj9t6lWd3bw9MrXnqaflk/kBaTgstA==))
-// does not contain
-// FileArchive(src/files/file1.txt,eJxLy8xJNQQABeYB0g==),
-// FileArchive(src/files/file2.txt,eJxLy8xJNQIABecB0w==)
-// but contains
-// FileArchive(src/files/file2.txt,eJwdicENADEMwv7ZpWvRiz8RL9Y/NRI2SFzCTQ9plBIZEbfIghYUl+iNCwkPcj9t6lWd3bw9MrXnqaflk/kBaTgstA==),
-// FileArchive(src/files/file1.txt,eJxVijEKBEEQAnP/Mk+43xxFj8ENHSx+/+jdaEUsBcsv0XxzNvXLvg6VMoUYOhsHR1SeWSnG6JPGS/dq4UtYCzrY7M6EaS2sKWYg5vwHu4kyVw==) (ZipPartitionSpec.scala:15)
-//  [inf
