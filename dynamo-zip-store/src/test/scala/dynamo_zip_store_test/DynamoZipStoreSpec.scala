@@ -26,7 +26,7 @@ object DynamoZipStoreSpec extends Specification{
     val dynamoDbClient = DynamoDbClient.builder()
         .endpointOverride(URI.create(localstackEndpoint))
         .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test")))
-        .region(Region.US_EAST_1) // or any region
+        .region(Region.EU_WEST_1) // or any region
         .build()
   }
 }
