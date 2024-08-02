@@ -27,8 +27,8 @@ object DynamoZipStoreSpec extends Specification{
       val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), "myDynamoTable", "filename", "data")
         .unsafeRunSync()
 
-      println("downloads", downloaded.compile.toList)
-      println("uploads", toUpload.compile.toList)
+      println("downloads", downloaded.compile.toList.unsafeRunSync())
+      println("uploads", toUpload.compile.toList.unsafeRunSync())
 
       downloaded must_== toUpload
     }
