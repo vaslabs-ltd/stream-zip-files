@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: eu-west-1
-#      AWS_ACCESS_KEY_ID: test
-#      AWS_SECRET_ACCESS_KEY: test
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
     services:
       localstack:
         image: localstack/localstack:latest
@@ -39,10 +39,10 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
-    - name: Set up Aws cli
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: eu-west-1
+#    - name: Set up Aws cli
+#      uses: aws-actions/configure-aws-credentials@v4
+#      with:
+#        aws-region: eu-west-1
     - name: Create DynamoDB table
       run: |
           aws --endpoint-url=http://localhost:4566 dynamodb create-table --region eu-west-1 --debug \
