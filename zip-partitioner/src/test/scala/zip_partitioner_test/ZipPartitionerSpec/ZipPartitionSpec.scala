@@ -29,7 +29,7 @@ object ZipPartitionerSpec extends Specification {
       createZipFile(saveTo, stream).unsafeRunSync()
       val exsistingFiles = hashFilesInDirectory("zip-partitioner/src/files/testFiles").unsafeRunSync()
 
-      unzip(saveTo, "zip-partitioner/src/files/testFilesAfterZip")
+      unzip(saveTo, "zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
       val unzipFiles = hashFilesInDirectory("zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
 
       mapsAreConsistent(exsistingFiles, unzipFiles) must_== true
@@ -66,7 +66,7 @@ object ZipPartitionerSpec extends Specification {
     }
 
 
-    def unzip(zipFilePath: String, destDir: String): Unit = {
+    def unzip(zipFilePath: String, destDir: String): IO[Unit] = IO {
       val buffer = new Array[Byte](1024)
 
       val dir = new File(destDir)

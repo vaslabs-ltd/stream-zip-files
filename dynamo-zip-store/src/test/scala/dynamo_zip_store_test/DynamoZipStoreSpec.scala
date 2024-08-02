@@ -2,6 +2,7 @@ package dynamo_zip_store_test
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import dynamo_zip_store.DynamoZipStore
 import dynamo_zip_store.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -22,9 +23,9 @@ object DynamoZipStoreSpec extends Specification{
 
       val toUpload: Stream[IO, FileArchive] = Stream.emits(List(FileArchive("test", "test"))).covary[IO]
 
-      uploadFilesToDynamoDB(dynamoDbClient, toUpload, "myDynamoTable", "filename", "data")
+      uploadFilesToDynamoDB(dynamoDbClient, toUpload, dynamoConfig)
 
-      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), "myDynamoTable", "filename", "data")
+      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), dynamoConfig)
         .unsafeRunSync()
 
       println("downloads", downloaded.compile.toList.unsafeRunSync())
@@ -39,12 +40,12 @@ object DynamoZipStoreSpec extends Specification{
       val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
       val listFileArchives = createStreamArchive(filePaths)
 
-      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, "myDynamoTable", "filename", "data")
+      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, dynamoConfig)
 
       sleep(2000)
 
       val fileNames = List("file1.txt", "file2.txt")
-      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, "myDynamoTable", "filename", "data")
+      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, dynamoConfig)
         .unsafeRunSync()
         .compile
         .toList
@@ -63,5 +64,7 @@ object DynamoZipStoreSpec extends Specification{
         .region(Region.EU_WEST_1)
         .build()
     }
+
+  val dynamoConfig = DynamoZipStore.DynamoDestinationConfig("myDynamoTable", "filename", "data")
 }
 
