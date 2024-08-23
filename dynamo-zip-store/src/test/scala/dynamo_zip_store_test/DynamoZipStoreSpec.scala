@@ -62,19 +62,22 @@ object DynamoZipStoreSpec extends Specification{
         .build()
 
     val tableName = UUID.randomUUID().toString
-    val dynamoConfig = DynamoZipStore.DynamoDestinationConfig(tableName, "fileName", "data")
+    val keyColumnName = "fileName"
+    val dataColumnName = "data"
+
+    val dynamoConfig = DynamoZipStore.DynamoDestinationConfig(tableName, keyColumnName, dataColumnName)
 
     val createTableRequest = CreateTableRequest.builder()
       .tableName(dynamoConfig.tableName)
       .keySchema(
         KeySchemaElement.builder()
-          .attributeName("fileName")
+          .attributeName(keyColumnName)
           .keyType(KeyType.HASH)
           .build()
       )
       .attributeDefinitions(
         AttributeDefinition.builder()
-          .attributeName("fileName")
+          .attributeName(keyColumnName)
           .attributeType(ScalarAttributeType.S)
           .build()
       )
