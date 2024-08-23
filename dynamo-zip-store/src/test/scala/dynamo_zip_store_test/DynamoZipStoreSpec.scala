@@ -11,9 +11,11 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import zip_partitioner.FileArchive
 import zip_partitioner.ZipPartitioner.createStreamArchive
 import fs2.Stream
+import software.amazon.awssdk.services.dynamodb.model.{AttributeDefinition, CreateTableRequest, KeySchemaElement, KeyType, ScalarAttributeType}
 import zip_partitioner.dynamo.DynamoZipStore
 
 import java.net.URI
+import java.util.UUID
 
 object DynamoZipStoreSpec extends Specification{
 
@@ -58,8 +60,36 @@ object DynamoZipStoreSpec extends Specification{
         .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("test", "test")))
         .region(Region.EU_WEST_1)
         .build()
-    }
 
-  val dynamoConfig = DynamoZipStore.DynamoDestinationConfig("myDynamoTable", "fileName", "data")
+    val tableName = UUID.randomUUID().toString
+    val dynamoConfig = DynamoZipStore.DynamoDestinationConfig(tableName, "fileName", "data")
+
+    val createTableRequest = CreateTableRequest.builder()
+      .tableName(dynamoConfig.tableName)
+      .keySchema(
+        KeySchemaElement.builder()
+          .attributeName("fileName")
+          .keyType(KeyType.HASH)
+          .build()
+      )
+      .attributeDefinitions(
+        AttributeDefinition.builder()
+          .attributeName("fileName")
+          .attributeType(ScalarAttributeType.S)
+          .build()
+      )
+      .provisionedThroughput(
+        software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput.builder()
+          .readCapacityUnits(5L)
+          .writeCapacityUnits(5L)
+          .build()
+      )
+      .build()
+
+    dynamoDbClient.createTable(
+      createTableRequest
+    ).get()
+  }
+
 }
 
