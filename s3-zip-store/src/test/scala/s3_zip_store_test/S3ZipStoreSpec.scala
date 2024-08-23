@@ -175,7 +175,7 @@ object S3ZipStoreSpec extends Specification {
 
     val originalFileContent1 = "Hello, World"
     val originalFileContent2 = "Hello, World 2"
-    createBucket(uncompressedBucket.value, s3AsyncClient).unsafeRunSync().toString)
+    createBucket(uncompressedBucket.value, s3AsyncClient).unsafeRunSync()
     createBucket(compressedBucket.value, s3AsyncClient).unsafeRunSync()
   }
 
