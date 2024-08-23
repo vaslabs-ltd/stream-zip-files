@@ -28,7 +28,7 @@ jobs:
         ports:
           - 4566:4566
         options: >-
-          --env SERVICES=dynamodb, s3
+          --env SERVICES=dynamodb,s3
           --env DEFAULT_REGION=eu-west-1
 
     steps:
