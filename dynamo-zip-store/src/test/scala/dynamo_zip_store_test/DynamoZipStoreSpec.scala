@@ -37,7 +37,7 @@ object DynamoZipStoreSpec extends Specification{
 
   "DynamoZipStore" should {
     "full circle test" in new LocalScope {
-      val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
+      val filePaths = List("zip-partitioner/src/files/testFiles/file1.txt", "zip-partitioner/src/files/testFiles/file2.txt")
       val listFileArchives = createStreamArchive(filePaths)
 
       uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, dynamoConfig).compile.drain.unsafeRunSync()

@@ -41,7 +41,6 @@ lazy val s3ZipStore = (project in file("s3-zip-store"))
   .dependsOn(zipPartitioner)
   .settings(
     libraryDependencies += "io.laserdisc" %% "fs2-aws-s3" % "6.1.3",
-//    libraryDependencies += "software.amazon.awssdk" % "s3" % "2.27.10" % Test,
     libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test",
     libraryDependencies += "eu.timepit" %% "refined" % "0.11.2"
   )

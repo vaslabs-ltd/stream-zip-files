@@ -16,21 +16,20 @@ import java.util.zip.{ZipEntry, ZipInputStream}
 object ZipPartitionerSpec extends Specification {
 
   "ZipPartitioner" should {
-    "createStreamArchive" in {
-      val filePaths = List("zip-partitioner/src/files/file1.txt", "zip-partitioner/src/files/file2.txt")
-      val result = createStreamArchive(filePaths)
+    "createStreamArchive" in new LocalScope {
+      val result = createStreamArchive(files)
       result.compile.toList.unsafeRunSync().size must_== 2
     }
   }
 
   "ZipBuilder" should {
     "createZipFile" in new LocalScope {
-      val stream = createStreamArchive(paths)
+      val stream = createStreamArchive(files)
       createZipFile(saveTo, stream).unsafeRunSync()
-      val exsistingFiles = hashFilesInDirectory("zip-partitioner/src/files/testFiles").unsafeRunSync()
+      val exsistingFiles = hashFilesInDirectory(filesDir).unsafeRunSync()
 
-      unzip(saveTo, "zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
-      val unzipFiles = hashFilesInDirectory("zip-partitioner/src/files/testFilesAfterZip").unsafeRunSync()
+      unzip(saveTo, saveToDir).unsafeRunSync()
+      val unzipFiles = hashFilesInDirectory(saveToDir).unsafeRunSync()
 
       mapsAreConsistent(exsistingFiles, unzipFiles) must_== true
 
@@ -40,8 +39,10 @@ object ZipPartitionerSpec extends Specification {
   }
 
   trait LocalScope extends Scope {
-    val paths = List("zip-partitioner/src/files/testFiles/file1.txt", "zip-partitioner/src/files/testFiles/file2.txt")
+    val files = List("zip-partitioner/src/files/testFiles/file1.txt", "zip-partitioner/src/files/testFiles/file2.txt")
+    val filesDir = "zip-partitioner/src/files/testFiles"
 
+    val saveToDir = "zip-partitioner/src/files/testFilesAfterZip"
     val saveTo = "zip-partitioner/src/files/testFilesAfterZip/zipFile.zip"
 
     def computeHash(file: Path, algorithm: String = "SHA-256"): IO[String] = {
