@@ -11,17 +11,15 @@ import java.util.zip.{Deflater, Inflater, ZipOutputStream}
 
 object ZipPartitioner {
 
-  private var myDB: List[FileArchive] = List.empty
-
   private def readFile(path: String): Stream[IO, Byte] = {
     Files[IO].readAll(Path(path))
   }
 
-  def encodeBase64(bytes: Array[Byte]): String = {
+  private def encodeBase64(bytes: Array[Byte]): String = {
     Base64.getEncoder.encodeToString(bytes)
   }
 
-  def compress (bytes: Array[Byte]): Array[Byte] = {
+  private def compress(bytes: Array[Byte]): Array[Byte] = {
     val deflater = new Deflater()
     deflater.setInput(bytes)
     deflater.finish
@@ -41,7 +39,6 @@ object ZipPartitioner {
     val bytes = readFile(path).compile.to(Array).unsafeRunSync()
     val compressed = compress(bytes)
     val fa = FileArchive(path.split('/').last, encodeBase64(compressed))
-    myDB = myDB :+ fa
     fa
   }
 
@@ -56,9 +53,7 @@ object ZipPartitioner {
 
 }
 
-object ZipBuilder extends IOApp.Simple {
-
-  private val saveTo = "zip-partitioner/src/files/zipFile.zip"
+object ZipBuilder {
 
   def createZipFile(saveTo: String, fileArchive: Stream[IO, FileArchive]): IO[Unit] = {
     val streamBytes: Stream[IO, (String, Array[Byte])] = fileArchive.map(serializeFileArchive).covary[IO]
@@ -97,13 +92,6 @@ object ZipBuilder extends IOApp.Simple {
     }
 
     outputStream.toByteArray
-  }
-
-  override def run: IO[Unit] = {
-
-    val filePaths = List("src/files/file1.txt", "src/files/file2.txt", "src/files/file3.pdf", "src/files/large_file1.txt", "src/files/large_file2.txt")
-    createZipFile(saveTo, ZipPartitioner.createStreamArchive(filePaths))
-    IO.unit
   }
 }
 

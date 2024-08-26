@@ -23,11 +23,7 @@ project/project/metals.sbt
 .metals
 .metals.bsp
 src/files/*
-zip-partitioner/src/files/file1.txt
-zip-partitioner/src/files/file2.txt
-zip-partitioner/src/files/file3.pdf
-zip-partitioner/src/files/large_file1.txt
-zip-partitioner/src/files/large_file2.txt
+zip-partitioner/src/test/resources/files/testFilesAfterZip/zipFile.zip
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

@@ -6,7 +6,11 @@ lazy val root = (project in file("."))
   .settings(
     name := "stream-zip"
   )
-  .aggregate(zipPartitioner, dynamoZipStore)
+  .aggregate(
+    zipPartitioner,
+    dynamoZipStore,
+    s3ZipStore
+  )
 
 
 lazy val zipPartitioner = (project in file("zip-partitioner"))
@@ -29,3 +33,14 @@ lazy val dynamoZipStore = (project in file("dynamo-zip-store"))
     libraryDependencies += "software.amazon.awssdk" % "dynamodb" % "2.26.25",
     libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test"
 )
+
+lazy val s3ZipStore = (project in file("s3-zip-store"))
+  .settings(
+    name := "s3-zip-store"
+  )
+  .dependsOn(zipPartitioner)
+  .settings(
+    libraryDependencies += "io.laserdisc" %% "fs2-aws-s3" % "6.1.3",
+    libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test",
+    libraryDependencies += "eu.timepit" %% "refined" % "0.11.2"
+  )
