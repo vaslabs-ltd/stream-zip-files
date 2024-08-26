@@ -39,11 +39,11 @@ object ZipPartitionerSpec extends Specification {
   }
 
   trait LocalScope extends Scope {
-    val files = List("zip-partitioner/src/files/testFiles/file1.txt", "zip-partitioner/src/files/testFiles/file2.txt")
-    val filesDir = "zip-partitioner/src/files/testFiles"
+    val files = List("zip-partitioner/src/test/resources/files/testFiles/file1.txt", "zip-partitioner/src/test/resources/files/testFiles/file2.txt")
+    val filesDir = "zip-partitioner/src/test/resources/files/testFiles"
 
-    val saveToDir = "zip-partitioner/src/files/testFilesAfterZip"
-    val saveTo = "zip-partitioner/src/files/testFilesAfterZip/zipFile.zip"
+    val saveToDir = "zip-partitioner/src/test/resources/files/testFilesAfterZip"
+    val saveTo = "zip-partitioner/src/test/resources/files/testFilesAfterZip/zipFile.zip"
 
     def computeHash(file: Path, algorithm: String = "SHA-256"): IO[String] = {
       Files[IO].readAll(file)
