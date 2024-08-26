@@ -27,7 +27,7 @@ object S3ZipStore {
     }
 
   // create a zip file in the form of a byte stream out of several file keys retrieved from s3
-  def retrieveMultiple(compressedBucket: NonEmptyString, fileKeys: List[NonEmptyString], streamSize: Int = 1024512, s3AsyncClient: S3AsyncClient): fs2.Stream[IO, Byte] =
+  def retrieveMultiple(compressedBucket: NonEmptyString, fileKeys: List[NonEmptyString], streamSize: Int = 1024*512, s3AsyncClient: S3AsyncClient): fs2.Stream[IO, Byte] =
     withS3(s3AsyncClient).flatMap { s3 =>
       fs2.Stream.emits(fileKeys).map { fileKey =>
         val body = s3.readFile(BucketName(compressedBucket), FileKey(fileKey))

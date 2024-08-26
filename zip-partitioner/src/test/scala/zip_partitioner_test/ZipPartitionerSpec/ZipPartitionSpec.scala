@@ -26,7 +26,7 @@ object ZipPartitionerSpec extends Specification {
     "createZipFile" in new LocalScope {
       val stream = createStreamArchive(files)
       createZipFile(saveTo, stream).unsafeRunSync()
-      val exsistingFiles = hashFilesInDirectory(filesDir).unsafeRunSync()
+      val exsistingFiles: Map[String, String] = hashFilesInDirectory(filesDir).unsafeRunSync()
 
       unzip(saveTo, saveToDir).unsafeRunSync()
       val unzipFiles = hashFilesInDirectory(saveToDir).unsafeRunSync()
