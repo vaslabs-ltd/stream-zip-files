@@ -2,53 +2,32 @@ package dynamo_zip_store_test
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import zip_partitioner.dynamo.DynamoZipStore.{downloadFilesFromDynamoDB, uploadFilesToDynamoDB}
+import eu.timepit.refined.types.string.NonEmptyString
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
+import software.amazon.awssdk.services.dynamodb.model._
 import zip_partitioner.FileArchive
-import zip_partitioner.ZipPartitioner.createStreamArchive
-import fs2.Stream
-import software.amazon.awssdk.services.dynamodb.model.{AttributeDefinition, CreateTableRequest, KeySchemaElement, KeyType, ScalarAttributeType}
-import zip_partitioner.dynamo.DynamoZipStore
+import zip_partitioner.dynamo.{DynamoTableConfig, DynamoZipStore}
+import zip_partitioner.test_utils.{RawTestData, StoreTests}
 
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 object DynamoZipStoreSpec extends Specification{
 
   "DynamoZipStore" should {
     "uploadFilesToDynamoDB and then download them must be the same" in new LocalScope {
+      val RawTestData(zipContent, uncompressedFiles) = StoreTests.testStore(dynamoZipStore, uncompressedTableName, compressedTableName, List(fileKey1, fileKey2)).unsafeRunSync()
 
-      val toUpload: Stream[IO, FileArchive] = Stream.emits(List(FileArchive("test", "test"))).covary[IO]
+      zipContent(fileKey1) must_== originalFileContent1
+      zipContent(fileKey2) must_== originalFileContent2
 
-      uploadFilesToDynamoDB(dynamoDbClient, toUpload, dynamoConfig).compile.drain.unsafeRunSync()
-
-      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, List("test"), dynamoConfig)
-        .compile
-        .toList
-        .unsafeRunSync()
-
-      downloaded must_== toUpload.compile.toList.unsafeRunSync()
-    }
-  }
-
-  "DynamoZipStore" should {
-    "full circle test" in new LocalScope {
-      val filePaths = List("zip-partitioner/src/test/resources/files/testFiles/file1.txt", "zip-partitioner/src/test/resources/files/testFiles/file2.txt")
-      val listFileArchives = createStreamArchive(filePaths)
-
-      uploadFilesToDynamoDB(dynamoDbClient, listFileArchives, dynamoConfig).compile.drain.unsafeRunSync()
-
-      val fileNames = List("file1.txt", "file2.txt")
-      val downloaded = downloadFilesFromDynamoDB(dynamoDbClient, fileNames, dynamoConfig)
-        .compile
-        .toList
-        .unsafeRunSync()
-
-      downloaded must_== listFileArchives.compile.toList.unsafeRunSync()
+      zipContent(fileKey1) must_== uncompressedFiles(fileKey1)
+      zipContent(fileKey2) must_== uncompressedFiles(fileKey2)
     }
   }
 
@@ -61,37 +40,71 @@ object DynamoZipStoreSpec extends Specification{
         .region(Region.EU_WEST_1)
         .build()
 
-    val tableName = UUID.randomUUID().toString
+    val compressedTableName = NonEmptyString.unsafeFrom(UUID.randomUUID().toString)
+    val uncompressedTableName = NonEmptyString.unsafeFrom(UUID.randomUUID().toString)
+
     val keyColumnName = "fileName"
     val dataColumnName = "data"
+    val from = DynamoTableConfig(keyColumnName, dataColumnName)
+    val to = DynamoTableConfig(keyColumnName, dataColumnName)
+    val dynamoZipStore = new DynamoZipStore(
+      client = dynamoDbClient,
+      dynamoSourceConfig = from,
+      dynamoDestinationConfig = to
+    )
 
-    val dynamoConfig = DynamoZipStore.DynamoDestinationConfig(tableName, keyColumnName, dataColumnName)
 
-    val createTableRequest = CreateTableRequest.builder()
-      .tableName(dynamoConfig.tableName)
-      .keySchema(
-        KeySchemaElement.builder()
-          .attributeName(keyColumnName)
-          .keyType(KeyType.HASH)
-          .build()
-      )
-      .attributeDefinitions(
-        AttributeDefinition.builder()
-          .attributeName(keyColumnName)
-          .attributeType(ScalarAttributeType.S)
-          .build()
-      )
-      .provisionedThroughput(
-        software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput.builder()
-          .readCapacityUnits(5L)
-          .writeCapacityUnits(5L)
-          .build()
-      )
-      .build()
+    val createTableRequest1 = createDynamoTable(uncompressedTableName, from.keyColumnName)
+    val createTableRequest2 = createDynamoTable(compressedTableName, to.keyColumnName)
+    dynamoDbClient.createTable(
+      createTableRequest1
+    ).get()
 
     dynamoDbClient.createTable(
-      createTableRequest
+      createTableRequest2
     ).get()
+
+    val fileKey1: NonEmptyString = NonEmptyString.unsafeFrom(UUID.randomUUID().toString)
+    val fileKey2: NonEmptyString = NonEmptyString.unsafeFrom(UUID.randomUUID().toString)
+
+    val originalFileContent1 = "Hello, World"
+    val originalFileContent2 = "Hello, World 2"
+    def stringStream(value: String): fs2.Stream[IO, Byte] = fs2.Stream.emits(value.getBytes(StandardCharsets.UTF_8))
+
+    dynamoZipStore.uploadFilesToDynamoDB(
+      fs2.Stream(
+        FileArchive(fileKey1.value, stringStream(originalFileContent1)),
+        FileArchive(fileKey2.value, stringStream(originalFileContent2))
+      ),
+      uncompressedTableName,
+      from
+    ).compile.drain.unsafeRunSync()
+
+    private def createDynamoTable(table: NonEmptyString, keyColumnName: String) = {
+      CreateTableRequest.builder()
+        .tableName(table.value)
+        .keySchema(
+          KeySchemaElement.builder()
+            .attributeName(keyColumnName)
+            .keyType(KeyType.HASH)
+            .build()
+        )
+        .attributeDefinitions(
+          AttributeDefinition.builder()
+            .attributeName(keyColumnName)
+            .attributeType(ScalarAttributeType.S)
+            .build()
+        )
+        .provisionedThroughput(
+          software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput.builder()
+            .readCapacityUnits(5L)
+            .writeCapacityUnits(5L)
+            .build()
+        )
+        .build()
+    }
+
+
   }
 
 }
