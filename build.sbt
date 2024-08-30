@@ -9,7 +9,8 @@ lazy val root = (project in file("."))
   .aggregate(
     `zip-partitioner`,
     `dynamo-zip-store`,
-    `s3-zip-store`
+    `s3-zip-store`,
+    `zip-partitioner-store-test`
   )
 
 
