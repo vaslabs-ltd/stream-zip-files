@@ -10,78 +10,27 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.s3.{S3AsyncClient, S3AsyncClientBuilder}
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.model.{CreateBucketRequest, CreateBucketResponse}
 import zip_partitioner.s3.S3ZipStore
+import zip_partitioner.test_utils.{RawTestData, StoreTests}
 
-import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util.UUID
-import java.util.zip.{Inflater, ZipFile, ZipInputStream}
 
 object S3ZipStoreSpec extends Specification {
 
-  "S3ManagerReportDatabaseStorage should transfer a file to S3 deflated" in new LocalScope {
+  "S3ManagerReportDatabaseStorage should transfer multiple files from S3 in a zip and single files inflated" in new LocalScope {
+    val RawTestData(zipContent, uncompressedFiles) = StoreTests.testStore(s3ZipStore, uncompressedBucket, compressedBucket, List(fileKey1, fileKey2)).unsafeRunSync()
 
-    // retrieve the file from the compressed bucket inflated
-    val getFileFromStorage = s3RetrieveSingle(fileKey1)
+    zipContent(fileKey1) must_== originalFileContent1
+    zipContent(fileKey2) must_== originalFileContent2
 
-    originalFileContent1 must_== getFileFromStorage
-
-    //get multiple as zip, unzip and find same result
-    val getFileFromStorageAsZipBytes = s3RetrieveMultiple(List(fileKey1))
-
-    val zipInputStream = new ZipInputStream(new ByteArrayInputStream(getFileFromStorageAsZipBytes.toArray))
-
-    val fileContent = getNextFileContent(zipInputStream)
-
-    fileContent must_== originalFileContent1
+    zipContent(fileKey1) must_== uncompressedFiles(fileKey1)
+    zipContent(fileKey2) must_== uncompressedFiles(fileKey2)
   }
 
-  "S3ManagerReportDatabaseStorage should transfer multiple files to S3 deflated" in new LocalScope {
-
-    val getFileFromStorage = s3RetrieveMultiple(List(fileKey1, fileKey2))
-
-    val zipInputStream = new ZipInputStream(new ByteArrayInputStream(getFileFromStorage.toArray))
-
-    val fileContents = getAllFileContents(zipInputStream)
-
-    fileContents(fileKey1.value) must_== originalFileContent1
-    fileContents(fileKey2.value) must_== originalFileContent2
-  }
-
-  private def getNextFileContent(zipInputStream: ZipInputStream) = {
-    val zipEntry = zipInputStream.getNextEntry
-
-    val dataOfZipEntry = zipInputStream.readAllBytes()
-    val inflate = new Inflater()
-    inflate.setInput(dataOfZipEntry)
-    val data = new Array[Byte](1024)
-    val read = inflate.inflate(data)
-
-    val fileContent = new String(data, 0, read)
-    fileContent
-  }
-
-  private def getAllFileContents(zipInputStream: ZipInputStream): Map[String, String] = {
-    val fileContents = scala.collection.mutable.Map[String, String]()
-    var zipEntry = zipInputStream.getNextEntry
-
-    while (zipEntry != null) {
-      val dataOfZipEntry = zipInputStream.readAllBytes()
-      val inflate = new Inflater()
-      inflate.setInput(dataOfZipEntry)
-      val data = new Array[Byte](1024)
-      val read = inflate.inflate(data)
-      val fileContent = new String(data, 0, read)
-      fileContents += (zipEntry.getName -> fileContent)
-      zipEntry = zipInputStream.getNextEntry
-    }
-
-    fileContents.toMap
-  }
-
-  def createBucket(bucketName: String, s3AsyncClient: S3AsyncClient) = {
+  def createBucket(bucketName: String, s3AsyncClient: S3AsyncClient): IO[CreateBucketResponse] = {
     val req = CreateBucketRequest.builder()
       .bucket(bucketName)
       .build()
@@ -131,27 +80,7 @@ object S3ZipStoreSpec extends Specification {
       .drain
       .unsafeRunSync()
 
-    def s3Transfer(fileIdentity: NonEmptyString): Unit = S3ZipStore.transfer(
-      from = uncompressedBucket,
-      to = compressedBucket,
-      fileIdentifier = fileIdentity,
-      s3AsyncClient = s3AsyncClient
-    ).compile.drain.unsafeRunSync()
-
-    s3Transfer(fileKey1)
-    s3Transfer(fileKey2)
-
-    def s3RetrieveSingle(fileIdentity: NonEmptyString): String = S3ZipStore.retrieveSingle(
-      compressedBucket = compressedBucket,
-      fileKey = fileIdentity,
-      s3AsyncClient = s3AsyncClient
-    ).through(fs2.text.utf8.decode).compile.string.unsafeRunSync()
-
-    def s3RetrieveMultiple(fileIdentities: List[NonEmptyString]): Vector[Byte] = S3ZipStore.retrieveMultiple(
-      compressedBucket = compressedBucket,
-      fileKeys = fileIdentities,
-      s3AsyncClient = s3AsyncClient
-    ).compile.toVector.unsafeRunSync()
+    val s3ZipStore = new S3ZipStore(s3AsyncClient)
 
   }
 }
