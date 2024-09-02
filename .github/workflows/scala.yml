@@ -24,7 +24,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: test
     services:
       localstack:
-        image: localstack/localstack:latest
+        image: localstack/localstack:3.7.0
         ports:
           - 4566:4566
         options: >-

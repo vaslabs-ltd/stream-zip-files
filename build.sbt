@@ -7,40 +7,58 @@ lazy val root = (project in file("."))
     name := "stream-zip"
   )
   .aggregate(
-    zipPartitioner,
-    dynamoZipStore,
-    s3ZipStore
+    `zip-partitioner`,
+    `dynamo-zip-store`,
+    `s3-zip-store`,
+    `zip-partitioner-store-test`
   )
 
 
-lazy val zipPartitioner = (project in file("zip-partitioner"))
+lazy val `zip-partitioner` = (project in file("zip-partitioner"))
   .settings(
     name := "zip-partitioner"
   )
   .settings(
-    libraryDependencies += "co.fs2" %% "fs2-core" % "3.10.2",
-    libraryDependencies += "co.fs2" %% "fs2-io" % "3.10.2",
-    libraryDependencies += "org.typelevel" %% "cats-effect" % "3.5.4",
-    libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test"
+    libraryDependencies ++= Seq(
+        "eu.timepit" %% "refined" % "0.11.2",
+        "co.fs2" %% "fs2-core" % "3.10.2",
+        "co.fs2" %% "fs2-io" % "3.10.2",
+        "org.typelevel" %% "cats-effect" % "3.5.4",
+        "org.specs2" %% "specs2-core" % "4.20.7" % "test"
+      )
   )
 
-lazy val dynamoZipStore = (project in file("dynamo-zip-store"))
+lazy val `dynamo-zip-store` = (project in file("dynamo-zip-store"))
   .settings(
     name := "dynamo-zip-store"
   )
-  .dependsOn(zipPartitioner)
+  .dependsOn(`zip-partitioner`, `zip-partitioner-store-test` % Test)
   .settings(
-    libraryDependencies += "software.amazon.awssdk" % "dynamodb" % "2.26.25",
-    libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test"
-)
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "dynamodb" % "2.26.25",
+      "org.specs2" %% "specs2-core" % "4.20.7" % "test"
+    )
+  )
 
-lazy val s3ZipStore = (project in file("s3-zip-store"))
+lazy val `s3-zip-store` = (project in file("s3-zip-store"))
   .settings(
     name := "s3-zip-store"
   )
-  .dependsOn(zipPartitioner)
+  .dependsOn(`zip-partitioner`, `zip-partitioner-store-test` % Test)
   .settings(
-    libraryDependencies += "io.laserdisc" %% "fs2-aws-s3" % "6.1.3",
-    libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.7" % "test",
-    libraryDependencies += "eu.timepit" %% "refined" % "0.11.2"
+    libraryDependencies ++= Seq(
+      "io.laserdisc" %% "fs2-aws-s3" % "6.1.3",
+      "org.specs2" %% "specs2-core" % "4.20.7" % "test",
+    )
   )
+
+lazy val `zip-partitioner-store-test` = (project in file("zip-partitioner-store-test"))
+  .settings(
+    name := "zip-partitioner-store-test"
+  ).dependsOn(`zip-partitioner`)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.specs2" %% "specs2-core" % "4.20.7" % "test"
+    )
+  )
+
