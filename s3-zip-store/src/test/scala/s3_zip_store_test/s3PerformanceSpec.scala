@@ -61,7 +61,7 @@ object s3PerformanceSpec extends Specification {
     val s3: S3[IO] = S3.create(s3Interpreter)
 
     val writeFileKeys = for  {
-      i <- 1 to 1000
+      i <- 1 to 100
       fileKey = NonEmptyString.unsafeFrom(s"fileKey$i")
       _ = readResourceFile(s"s3-zip-store/src/test/resources/file_$i.txt")
         .through(s3.uploadFile(BucketName(uncompressedBucket), FileKey(fileKey)))

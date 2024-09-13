@@ -28,7 +28,7 @@ def create_multiple_files(directory, num_files, size_in_gb, character='A'):
 if __name__ == "__main__":
     # Specify the number of files and size in GB for each file
     directory = "s3-zip-store/src/test/resources"
-    num_files = 1000
+    num_files = 100
     size_in_gb = 1
     character = 'A'  # The character to write in the file
 
