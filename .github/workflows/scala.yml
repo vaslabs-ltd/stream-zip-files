@@ -39,6 +39,8 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: 'sbt'
+    - name: Run generate_files.py
+      run: python generate_files.py
     - name: Run tests
       run: sbt test
 
