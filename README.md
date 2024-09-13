@@ -35,3 +35,29 @@ You can retrieve files stored in DynamoDB as streams.
 
 3) Zip Files On-The-Fly
 As files are streamed, they are simultaneously zipped into a single archive that can be served to clients.
+
+## Evaluation
+
+Let's check the memory usage with different setups:
+
+### - 100 files with a size of 50MB each
+
+![100_files_50MB_each](/images/100_files_50MB_each.png)
+
+![proof_100_files_50MB_each](/images/proof_100_files_50MB_each.png)
+
+### - 500 files with a size of 10MB each
+
+![500_files_10MB_each](/images/500_files_10MB_each.png)
+
+![proof_500_files_10MB_each](/images/proof_500_files_10MB_each.png)
+
+### - 1000 files with a size of 10MB each
+
+![1000_files_10MB_each](/images/1000_files_10MB_each.png)
+
+![proof_1000_files_10MB_each](/images/proof_1000_files_10MB_each.png)
+
+### - 1000 files wth a size of 10MB each but now my JVM heap size is smaller
+
+![1000_files_smaller_heap](/images/1000_files_smaller_heap.png)
