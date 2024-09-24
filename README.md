@@ -6,7 +6,7 @@
 
 With this library, you can stream the files directly from the source, compress them on the fly into a zip archive, and serve the zip to clients without loading everything into memory.
 
-You can find a blog for this library [here](https://www.google.com)
+You can find a blog for this library [blog](https://blog.arcticshores.dev/posts/zip-partitioner/)
 
 ## Features
 
