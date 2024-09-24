@@ -8,7 +8,6 @@ project/project/.bloop
 project/.bloop
 remote.conf
 .DS_Store
-*.png
 shell.nix
 .direnv
 .nixpkgs*
